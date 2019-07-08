@@ -263,7 +263,8 @@
 
 
     document.onkeydown = function(evt){
-
+        console.log(evt.keyCode)
+ 
         switch(evt.keyCode){
             case 68:
                 getMIDIMessage({
@@ -277,9 +278,9 @@
                 })
                 break;
 
-            case 81:
+            case 70:
                 getMIDIMessage({
-                    data: [0, 1, 44]
+                    data: [0, 2, 44]
                 })
                 break;
 
