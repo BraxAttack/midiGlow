@@ -4,15 +4,90 @@
         margin: 0px;
     }
 
-</style>
+    #settingsButton {
+        position: absolute;
+        top: 10px;
+        right: 30px;
+        z-index: 2;
+    }
 
+    #settingsPage {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: #4f5b62;
+        display: none;
+        overflow: hidden;
+        overflow-y: scroll;
+
+    }
+
+    #settingsTable {
+        width: 500px;
+        margin: auto;    
+        margin-top: 50px;
+        margin-bottom: 50px;
+        border-style: solid;
+        border-color: #000000;
+        border-width: 1px;
+        background-color: #37474f;
+        text-align: center;
+        color: #ffffff;
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 13px;
+
+    }
+
+    #settingsTable td{
+        background-color: #ffffff; 
+        color: #000000;
+        padding: 5px;
+    }
+
+    .settingsTableCell {
+
+    }
+
+    .settingsTableKeyboardBinding {
+        width: 60px;
+
+    }
+
+
+</style>
+<link rel='stylesheet' href='spectrum/spectrum.css' />
 
 
 <canvas id="midiGlowCanvas" width="1000" height="1000"></canvas>
+<button id="settingsButton" type="button" onclick="toggleSettings('open')">Settings</button>
+<div id="settingsPage">
 
 
 
-<!--animation scripts-->
+    <table id="settingsTable">
+        <tr>
+          <th>Midi Note</th>
+          <th style="width: 100px;">Keyboard Binding</th>
+          <th>Event</th>
+          <th style="width: 100px;">Colors</th>
+        </tr>
+
+      </table>
+
+
+
+</div>
+
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+
+<script src='spectrum/spectrum.js'></script>
+
+  <!--animation scripts-->
 <script src="Displays/bouncyBallsCircle.js"></script>
 <script src="Displays/circle.js"></script>
 <script src="Displays/fullColor.js"></script>
@@ -67,7 +142,16 @@
     canvas.width = width;
     canvas.height = height;
     var ctx = canvas.getContext("2d");
+    var settingsMenueIsOpen = false;
 
+    //settings table settings
+    var settingsTable = document.getElementById('settingsTable')
+    var eventDropdownSelector;
+    var colorSelectorDiv;
+    var numberOfMIDInotes = 128;
+    var MIDISettings = {
+
+    }
 
     var midiEventLookupObj = {
         0: {
@@ -93,24 +177,246 @@
         },
 
     }
+    var midiEventLookupObjKeysArray = Object.keys(midiEventLookupObj)
 
     var initAnimationsArray = [];
     var mostRecentMidiDisplayCommand = "";
 
+    var keyCode;
+    var letter;
+    
+
+    function init(){
+        initEventDropdownSelector()
+        initColorPickerSelectors()
+        initSettingsTable()
+        renderSettingsTable()
+        animate()
+
+        document.onkeydown = function(evt){
+            keyCode = evt.keyCode
+
+            Object.keys(MIDISettings).forEach(function (key) {
+                if(MIDISettings[key]['KeyboardBinding']['cpuSees'] == keyCode){
+                    getMIDIMessage({
+                        data: [0, key, 0]
+                    })
+                }
+
+            });        
+
+        }
+
+    }
+
+
+
+    function toggleSettings(){
+
+        settingsMenueIsOpen = !settingsMenueIsOpen
+         
+        renderSettingsPage()
+
+    }
+
+    function renderSettingsPage(){
+
+        if(settingsMenueIsOpen){
+            document.getElementById("settingsPage").style.display = "block";
+
+        }else{
+            document.getElementById("settingsPage").style.display = "none";
+
+        }
+
+    }
+
+
+    function initSettingsTable(){
+
+        var localStorageMidi = JSON.parse(localStorage.getItem("MIDISettings")); 
+
+        if(localStorageMidi && Object.keys(localStorageMidi).length == 128)
+        {
+            MIDISettings = localStorageMidi;
+            
+
+        }else{
+            for (var i = 0; i < numberOfMIDInotes; i++) { 
+                MIDISettings[i] = {
+                    noteName: i,
+                    KeyboardBinding: {
+                        userSees: null,
+                        cpuSees: null
+                    },
+                    event: null,
+                    colorsArray: ['#000000','#000000','#000000']
+                } 
+            }
+        }        
+    }
+
+    function initEventDropdownSelector(){
+
+        eventDropdownSelector = document.createElement("SELECT");
+        eventDropdownSelector.setAttribute("class", "settingsTableEventSelector")
+        var option = document.createElement("option");
+        option.value = -1;
+        option.text = "";
+        eventDropdownSelector.appendChild(option);
+
+        for (var i = 0; i < midiEventLookupObjKeysArray.length; i++) {
+            var option = document.createElement("option");
+            option.value = midiEventLookupObjKeysArray[i];
+            option.text = midiEventLookupObj[i]['displayName'];
+            eventDropdownSelector.appendChild(option);
+        }
+
+    }
+
+    function initColorPickerSelectors(){
+        colorSelectorDiv = document.createElement("DIV")
+        
+        for (var i = 0; i < 3; i++){
+            var colorSelector = document.createElement("INPUT");
+            colorSelector.setAttribute("type", "text");
+            colorSelector.setAttribute("id", "colorSelector" + i);
+            colorSelectorDiv.appendChild(colorSelector)
+
+        }
+
+
+    }
+
+
+    function nullFunction(value) {
+        return (value == null) ? "" : value
+    }
+
+    function renderSettingsTable(){
+
+        var tableText = "";
+
+        for (var i = 0; i < numberOfMIDInotes; i++) { 
+
+            var row = settingsTable.insertRow(-1);
+            var note = row.insertCell(0);
+            var noteVar = nullFunction(MIDISettings[i]['noteName']);
+            var keyboard = row.insertCell(1);
+            var keyboardVar = nullFunction(MIDISettings[i]['KeyboardBinding']['userSees']);
+            var eventID = row.insertCell(2);
+            var eventIDVar = nullFunction(MIDISettings[i]['event']);
+            var colors = row.insertCell(3);
+            var colorsVar = nullFunction(MIDISettings[i]['colorsArray']);
+
+            note.innerHTML = noteVar;
+
+            var k = document.createElement("INPUT");
+            k.setAttribute("type", "text");
+            k.setAttribute("id", "keyboardBinding" + i);
+            k.setAttribute("class", "settingsTableKeyboardBinding");
+            k.setAttribute("maxLength", 1);
+            k.setAttribute("value", keyboardVar);
+            
+            keyboard.appendChild(k)
+            $("#keyboardBinding"+i).change(function(value ) {
+
+                var ix = value.target.id.split("keyboardBinding")[1];
+
+                var valObj = {
+                    userSees: value.target.value,
+                    cpuSees: keyCode
+                }
+                receiveSettingsTableUpdate(ix,'KeyboardBinding', valObj, null)
+            });
+
+            var selector = eventDropdownSelector.cloneNode(true);
+            selector.setAttribute("id", "eventID" + i);
+            eventID.appendChild(selector);
+            document.getElementById("eventID"+i).value = eventIDVar;
+            $("#eventID"+i).change(function(value ) {
+                var ix = value.target.id.split("eventID")[1];
+
+                receiveSettingsTableUpdate(ix,'event', value.target.value, null)
+            });
+
+            var colorSelect = colorSelectorDiv.cloneNode(true);
+            for(var j = 0; j < colorSelect.children.length; j++){
+                var idVar = "colorSelector" + i + "-" + j;
+                colorSelect.children[j].setAttribute("id", idVar);
+
+            }
+            colors.appendChild(colorSelect);
+
+            for (var j = 0; j < colorSelect.children.length; j++){
+                $("#colorSelector"+i+"-"+j).spectrum({
+                    color: colorsVar[j]
+                })
+
+                $("#colorSelector"+i+"-"+j).change(function(color ) {    
+
+                    var input = color.target.id.split("colorSelector");
+                    var inputs = input[1].split("-");
+                    ix = inputs[0];
+                    jx = inputs[1];
+
+                    receiveSettingsTableUpdate(ix, 'colorsArray', $("#"+color['target']['id']).spectrum("get").toHex(), jx)
+
+                })
+
+            }
+        }
+
+
+        
+
+
+    }
+
+
+    function receiveSettingsTableUpdate(midiNote, column, value, index ){
+       
+
+        if(column == "colorsArray"){
+            MIDISettings[midiNote][column][index] = "#" + value
+
+        }else{
+            MIDISettings[midiNote][column] = value
+
+        }
+        
+
+        // Store Midi settings locally
+        localStorage.setItem("MIDISettings", JSON.stringify(MIDISettings));
+
+    }
 
     function resetLiveAnimaitonsArray(){
         initAnimationsArray = []
     }
 
     function addToinitAnimationsArray(midiEventID){
-        initAnimationsArray.push({
-            midiEventObjID: midiEventID,
-            initiate: true,
-            frame: 0,
-            function: "",
-            colorIndex: 0,
-            kill: false
-        })
+        //pull data from settings
+        var midiNote = midiEventID
+        var boundEvent = MIDISettings[midiNote]['event'];
+        var colorsArray = MIDISettings[midiNote]['colorsArray'];
+
+        if(boundEvent != null){
+            console.log("event")
+            initAnimationsArray.push({
+                boundEventObjID: boundEvent,
+                initiate: true,
+                frame: 0,
+                function: "",
+                settingsColorsArray: colorsArray,
+                colorIndex: 0,
+                kill: false
+            })
+
+        }else{
+            console.log("No event bound")
+        }
+
     }
 
     //TODO:
@@ -180,30 +486,30 @@
 
         //add init for each animation
         for (var i = 0; i < initAnimationsArray.length; i++) {
-            var baseAnimation = initAnimationsArray[i];
-            
+            var initAnimationObj = initAnimationsArray[i];
+
             //determines which display to init
-            switch(midiEventLookupObj[baseAnimation.midiEventObjID]['displayName']){
+            switch(midiEventLookupObj[initAnimationObj.boundEventObjID]['displayName']){
                 case 'bouncyBalls':
-                    bouncyBallsInit(midiEventLookupObj[baseAnimation.midiEventObjID]['colors'])
+                    bouncyBallsInit(initAnimationObj['settingsColorsArray'])
                     initAnimationsArray[i]['initiate'] = false
                     initAnimationsArray[i]['kill'] = true;
-                    animaitonCycleDisplayCommand = initAnimationsArray[i]['midiEventObjID'];
+                    animaitonCycleDisplayCommand = initAnimationsArray[i]['boundEventObjID'];
                     break;
 
                 case 'circle':
-                    bumpCircleInit(midiEventLookupObj[baseAnimation.midiEventObjID]['colors'], midiEventLookupObj[baseAnimation.midiEventObjID]['volume'])
+                    bumpCircleInit(initAnimationObj['settingsColorsArray'], midiEventLookupObj[initAnimationObj.boundEventObjID]['volume'])
                     initAnimationsArray[i]['initiate'] = false;
                     initAnimationsArray[i]['kill'] = true;
-                    animaitonCycleDisplayCommand = initAnimationsArray[i]['midiEventObjID'];
+                    animaitonCycleDisplayCommand = initAnimationsArray[i]['boundEventObjID'];
                 
                     break;
 
                 case 'fullColor':
-                    fullColorInit(midiEventLookupObj[baseAnimation.midiEventObjID]['colors'], midiEventLookupObj[baseAnimation.midiEventObjID]['volume'])
+                    fullColorInit(initAnimationObj['settingsColorsArray'], midiEventLookupObj[initAnimationObj.boundEventObjID]['volume'])
                     initAnimationsArray[i]['initiate'] = false;
                     initAnimationsArray[i]['kill'] = true;
-                    animaitonCycleDisplayCommand = initAnimationsArray[i]['midiEventObjID'];
+                    animaitonCycleDisplayCommand = initAnimationsArray[i]['boundEventObjID'];
                     break;
             }
         }
@@ -257,36 +563,8 @@
 
 
 
-    animate()
+    init()
 
-
-
-
-    document.onkeydown = function(evt){
-        console.log(evt.keyCode)
- 
-        switch(evt.keyCode){
-            case 68:
-                getMIDIMessage({
-                    data: [0, 0, 44]
-                })
-                break;
-
-            case 83:
-                getMIDIMessage({
-                    data: [0, 1, 44]
-                })
-                break;
-
-            case 70:
-                getMIDIMessage({
-                    data: [0, 2, 44]
-                })
-                break;
-
-        }
-
-    }
 
 
     

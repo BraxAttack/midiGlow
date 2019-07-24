@@ -28,8 +28,8 @@ function Circle(x,y,dx,dy,radius, color){
         this.x += this.dx
         this.y += this.dy
 
-        this.dy = this.dy * 0.95
-        this.dx = this.dx * 0.95
+        this.dy = this.dy * 0.92
+        this.dx = this.dx * 0.92
 
         this.draw()
     }
@@ -58,8 +58,8 @@ function createCircle(xValue, yValue, color){
     let radius = 20;
     let x = xValue;
     let y = yValue;
-    let dx = (Math.random()-0.5) *100
-    let dy = (Math.random()-0.5) *100
+    let dx = (Math.random()-0.5) *140
+    let dy = (Math.random()-0.5) *140
 
     bouncyBalls_CircleArray.push(new Circle(x, y, dx, dy, radius, color))
 
