@@ -71,7 +71,7 @@
           <th>Midi Note</th>
           <th style="width: 100px;">Keyboard Binding</th>
           <th>Event</th>
-          <th style="width: 100px;">Colors</th>
+          <th style="width: 100px;">Settings</th>
         </tr>
 
       </table>
@@ -91,6 +91,7 @@
 <script src="Displays/bouncyBallsCircle.js"></script>
 <script src="Displays/circle.js"></script>
 <script src="Displays/fullColor.js"></script>
+<script src="Displays/gifAnimation.js"></script>
 
 
 <script>
@@ -157,24 +158,27 @@
         0: {
             displayName: 'bouncyBalls',
             volume: 50,
-            colors: ["#f44336", "#2196f3", "#ffffff"],
             keepAliveInAnimationArray: false,
             clearAllOtherDisplays: true
         },
         1: {
             displayName: 'circle',
             volume: Math.max(width, height),
-            colors: ["#f44336", "#2196f3", "#ffffff"],
             keepAliveInAnimationArray: false,
             clearAllOtherDisplays: false
         },
         2: {
             displayName: 'fullColor',
             volume: 50,
-            colors: ["#f44336", "#2196f3", "#ffffff"],
             keepAliveInAnimationArray: false,
             clearAllOtherDisplays: true
         },
+        3: {
+            displayName: 'gifAnimation',
+            volume: 50,
+            keepAliveInAnimationArray: false,
+            clearAllOtherDisplays: true
+        }
 
     }
     var midiEventLookupObjKeysArray = Object.keys(midiEventLookupObj)
@@ -250,7 +254,8 @@
                         cpuSees: null
                     },
                     event: null,
-                    colorsArray: ['#000000','#000000','#000000']
+                    colorsArray: ['#000000','#000000','#000000'],
+                    imagePath: ""
                 } 
             }
         }        
@@ -350,7 +355,12 @@
 
             for (var j = 0; j < colorSelect.children.length; j++){
                 $("#colorSelector"+i+"-"+j).spectrum({
-                    color: colorsVar[j]
+                    color: colorsVar[j],
+                    showPalette: true,
+                    showSelectionPalette: true, // true by default
+                    palette: [ ],
+                    localStorageKey: "spectrum.settings",
+                    showInput: true
                 })
 
                 $("#colorSelector"+i+"-"+j).change(function(color ) {    
@@ -511,6 +521,13 @@
                     initAnimationsArray[i]['kill'] = true;
                     animaitonCycleDisplayCommand = initAnimationsArray[i]['boundEventObjID'];
                     break;
+
+                case 'gifAnimation':
+                    gifAnimationInit("Llama.png", 6);
+                    initAnimationsArray[i]['initiate'] = false;
+                    initAnimationsArray[i]['kill'] = true;
+                    animaitonCycleDisplayCommand = initAnimationsArray[i]['boundEventObjID'];
+                    break;
             }
         }
     
@@ -539,6 +556,9 @@
 
                     case 'fullColor':
                         runFullColor();
+                        break;
+                    case 'gifAnimation':
+                        runGifAnimation()
                         break;
 
                 }

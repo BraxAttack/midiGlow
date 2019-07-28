@@ -1,4 +1,4 @@
-var fullColor_currentColor = "#555555";
+var fullColor_currentColor = "#000000";
 var fullColor_volume = 0;
 var fullColor_colorArray = [];
 var fullColor_colorIndex = 0
