@@ -41,7 +41,6 @@
     }
 
     #settingsTable td{
-        background-color: #ffffff; 
         color: #000000;
         padding: 5px;
     }
@@ -55,6 +54,100 @@
 
     }
 
+    .settingsTableRow {
+        background-color: #ffffff;
+    }
+
+    .settingsTableRow:hover{
+        background-color: #7d868b
+    }
+
+    .settingsTableSettingsColumn:hover{
+        background-color: #ffeb3b
+    }
+
+    #settingsModalBG {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100%;
+        background-color: rgba(0, 0, 0, .5);
+        display: none;
+    }
+
+    #settingsModal {
+        width: 600px;
+        height: 800px;
+        position: absolute;
+        top: 100px;
+        left: calc(50vw - 300px);
+        background-color: #ffffff;
+        z-index: 3;
+    }
+
+    .settingsModalRow {
+        width: 100%;
+        height: 90px;
+        float: left;
+        
+    }
+
+    .settingsModalMidiNoteTitle {
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000000;
+        margin-top: 20px;
+        margin-left: 20px;
+        margin-bottom: 10px;
+        float: left;
+    }
+
+    #settingsModalMidiNote {
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000000;
+        margin-top: 20px;
+        margin-left: 20px;
+        margin-bottom: 10px;
+        margin-right: 410px;
+        float: left;
+    }
+
+    .settingsModalRowTitle {
+        font-family: Arial, Helvetica, sans-serif;
+        color: #000000;
+        margin-top: 20px;
+        margin-left: 20px;
+        margin-bottom: 10px;
+    }
+
+    #triColorSelectorHolder {
+        padding-left: 20px;
+    }
+
+    #settingsTableSaveButton {
+        position: absolute;
+        bottom: 20px;
+        right: 30px;
+        width: 80px;
+        height: 30px;
+        border-radius: 4px;
+        border-style: solid;
+        background-color: #32a852;
+        color: #ffffff;
+    }
+
+    .settingsCellColorSelector {
+        width: 15px;
+        height: 15px;
+        float: left;
+        margin: 3px;
+        border-style: solid;
+        border-width: 1px;
+    }
+
+    .spriteSelector{
+
+    }
 
 </style>
 <link rel='stylesheet' href='spectrum/spectrum.css' />
@@ -64,7 +157,39 @@
 <button id="settingsButton" type="button" onclick="toggleSettings('open')">Settings</button>
 <div id="settingsPage">
 
+    <div id="settingsModalBG">
+        <div id="settingsModal">
+            
+            <h2 class="settingsModalMidiNoteTitle">Midi Note:</h2>
+            <h2 id="settingsModalMidiNote">3</h2>
 
+            <div class="settingsModalRow">
+                <h3 class="settingsModalRowTitle">Colors</h3>
+    
+                <div id="triColorSelectorHolder">
+                    <input type="text" id="colorSelector0" class="colorSelector">
+                    <input type="text" id="colorSelector1" class="colorSelector">
+                    <input type="text" id="colorSelector2" class="colorSelector">
+                    
+                </div>
+    
+            </div>
+
+            <div class="settingsModalRow">
+                <h3 class="settingsModalRowTitle">Sprite File</h3>
+    
+                <div id="triColorSelectorHolder">
+                    <select type="text" id="spriteSelectorID" class="spriteSelector">
+                        <option value="-1"></option>
+                    </select>
+                </div>
+    
+            </div>
+    
+            <button id="settingsTableSaveButton" onclick="toggleSettingsModal()">Close</button>
+        </div>
+            
+    </div>
 
     <table id="settingsTable">
         <tr>
@@ -144,6 +269,7 @@
     canvas.height = height;
     var ctx = canvas.getContext("2d");
     var settingsMenueIsOpen = false;
+    var settingsMenueModalIsOpen = false;
 
     //settings table settings
     var settingsTable = document.getElementById('settingsTable')
@@ -151,6 +277,20 @@
     var colorSelectorDiv;
     var numberOfMIDInotes = 128;
     var MIDISettings = {
+
+    }
+    var settingsModalCurrentMidiNote = 0;
+    var spritesArray = {
+        0: {
+            imagePath: 'llama.png',
+            imageName: 'llama',
+            frames: 6
+        },
+        1: {
+            imagePath: 'MegamanMoving.png',
+            imageName: 'Megaman',
+            frames: 3
+        }
 
     }
 
@@ -191,6 +331,7 @@
     
 
     function init(){
+        initSpriteNameSelectors()
         initEventDropdownSelector()
         initColorPickerSelectors()
         initSettingsTable()
@@ -218,8 +359,43 @@
     function toggleSettings(){
 
         settingsMenueIsOpen = !settingsMenueIsOpen
-         
         renderSettingsPage()
+
+    }
+
+    function toggleSettingsModal(midiNote){
+
+        settingsMenueModalIsOpen = !settingsMenueModalIsOpen
+
+        renderSettingsModal(midiNote)
+        renderSettingsPage()
+
+    }
+
+    function renderSettingsModal(midiNote){
+
+        if(settingsMenueModalIsOpen){
+
+            if(midiNote != null){
+                settingsModalCurrentMidiNote = midiNote
+                document.getElementById("settingsModalMidiNote").innerHTML = settingsModalCurrentMidiNote;
+
+                for (var i = 0; i < 3; i++) { 
+                    $("#colorSelector"+i).spectrum({
+                        color: MIDISettings[midiNote]['colorsArray'][i]
+                    })
+                }
+                
+                document.getElementById("spriteSelectorID").value = MIDISettings[midiNote]['imageID']
+
+            }
+
+            document.getElementById("settingsModalBG").style.display = "block";
+
+        }else{
+            document.getElementById("settingsModalBG").style.display = "none";
+
+        }
 
     }
 
@@ -255,10 +431,14 @@
                     },
                     event: null,
                     colorsArray: ['#000000','#000000','#000000'],
-                    imagePath: ""
+                    imagePath: "",
+                    imageName: "",
+                    imageID: "-1",
+                    frames: 0
                 } 
             }
-        }        
+        }    
+        
     }
 
     function initEventDropdownSelector(){
@@ -279,17 +459,52 @@
 
     }
 
-    function initColorPickerSelectors(){
-        colorSelectorDiv = document.createElement("DIV")
-        
-        for (var i = 0; i < 3; i++){
-            var colorSelector = document.createElement("INPUT");
-            colorSelector.setAttribute("type", "text");
-            colorSelector.setAttribute("id", "colorSelector" + i);
-            colorSelectorDiv.appendChild(colorSelector)
 
+    function initSpriteNameSelectors(){
+
+        var select = document.getElementById("spriteSelectorID")
+        var objectKeys = Object.keys(spritesArray)
+        for (var i = 0; i < objectKeys.length; i++){
+            var option = document.createElement("option");
+            option.text = spritesArray[objectKeys[i]]['imageName']
+            option.value = objectKeys[i];
+            select.add(option)
         }
 
+        $("#spriteSelectorID").change(function(value ) {                   
+            
+            var sprite = spritesArray[value.target.value]
+            receiveSettingsTableUpdate(settingsModalCurrentMidiNote, 'imagePath', sprite['imagePath'], 0)
+            receiveSettingsTableUpdate(settingsModalCurrentMidiNote, 'imageName', sprite['imageName'], 0)
+            receiveSettingsTableUpdate(settingsModalCurrentMidiNote, 'frames', sprite['frames'], 0)
+            receiveSettingsTableUpdate(settingsModalCurrentMidiNote, 'imageID', value.target.value, 0)
+
+        })
+
+
+    }
+
+    function initColorPickerSelectors(){
+        
+        for (var i = 0; i < 3; i++) { 
+            $("#colorSelector"+i).spectrum({
+                color: '000000',
+                showPalette: true,
+                showSelectionPalette: true, // true by default
+                palette: [ ],
+                localStorageKey: "spectrum.settings",
+                showInput: true
+            })
+
+            $("#colorSelector"+i).change(function(color ) {    
+               
+                var indexVal = color.target.id.split("colorSelector")[1];
+                
+                receiveSettingsTableUpdate(settingsModalCurrentMidiNote, 'colorsArray', $("#"+color['target']['id']).spectrum("get").toHex(), indexVal)
+
+            })
+
+        }
 
     }
 
@@ -302,20 +517,24 @@
 
         var tableText = "";
 
+
+        $("#settingsTable tr").remove(); 
+
+
         for (var i = 0; i < numberOfMIDInotes; i++) { 
 
             var row = settingsTable.insertRow(-1);
+            row.setAttribute("class", "settingsTableRow")
             var note = row.insertCell(0);
             var noteVar = nullFunction(MIDISettings[i]['noteName']);
             var keyboard = row.insertCell(1);
             var keyboardVar = nullFunction(MIDISettings[i]['KeyboardBinding']['userSees']);
             var eventID = row.insertCell(2);
             var eventIDVar = nullFunction(MIDISettings[i]['event']);
-            var colors = row.insertCell(3);
-            var colorsVar = nullFunction(MIDISettings[i]['colorsArray']);
-
+            var settings = row.insertCell(3);
             note.innerHTML = noteVar;
 
+            //keyboard binding
             var k = document.createElement("INPUT");
             k.setAttribute("type", "text");
             k.setAttribute("id", "keyboardBinding" + i);
@@ -335,9 +554,10 @@
                 receiveSettingsTableUpdate(ix,'KeyboardBinding', valObj, null)
             });
 
-            var selector = eventDropdownSelector.cloneNode(true);
-            selector.setAttribute("id", "eventID" + i);
-            eventID.appendChild(selector);
+            //event dropdown selector
+            var s = eventDropdownSelector.cloneNode(true);
+            s.setAttribute("id", "eventID" + i);
+            eventID.appendChild(s);
             document.getElementById("eventID"+i).value = eventIDVar;
             $("#eventID"+i).change(function(value ) {
                 var ix = value.target.id.split("eventID")[1];
@@ -345,44 +565,60 @@
                 receiveSettingsTableUpdate(ix,'event', value.target.value, null)
             });
 
-            var colorSelect = colorSelectorDiv.cloneNode(true);
-            for(var j = 0; j < colorSelect.children.length; j++){
-                var idVar = "colorSelector" + i + "-" + j;
-                colorSelect.children[j].setAttribute("id", idVar);
 
-            }
-            colors.appendChild(colorSelect);
+            settings.setAttribute("onclick", "toggleSettingsModal("+i+")")
+            settings.setAttribute("class", "settingsTableSettingsColumn")
 
-            for (var j = 0; j < colorSelect.children.length; j++){
-                $("#colorSelector"+i+"-"+j).spectrum({
-                    color: colorsVar[j],
-                    showPalette: true,
-                    showSelectionPalette: true, // true by default
-                    palette: [ ],
-                    localStorageKey: "spectrum.settings",
-                    showInput: true
-                })
 
-                $("#colorSelector"+i+"-"+j).change(function(color ) {    
+            var settingsDiv = document.createElement("div")
+            //settings display
+            switch (eventIDVar){
+                case null:
 
-                    var input = color.target.id.split("colorSelector");
-                    var inputs = input[1].split("-");
-                    ix = inputs[0];
-                    jx = inputs[1];
+                    break;
+                case '0':
+                    settingsDiv = createSettingsCellColorDiv(nullFunction(MIDISettings[i]['colorsArray']))
+                    break;
+                case '1':
+                    settingsDiv = createSettingsCellColorDiv(nullFunction(MIDISettings[i]['colorsArray']))
+                    break;
+                case '2':
+                    settingsDiv = createSettingsCellColorDiv(nullFunction(MIDISettings[i]['colorsArray']))
+                    break;
+                case '3':
+                    settingsDiv = createSettingsCellSpriteDiv(nullFunction(MIDISettings[i]['imageName']))
+                    break;
+            } 
 
-                    receiveSettingsTableUpdate(ix, 'colorsArray', $("#"+color['target']['id']).spectrum("get").toHex(), jx)
 
-                })
+            settings.appendChild(settingsDiv);
 
-            }
+
         }
-
-
-        
-
 
     }
 
+
+    function createSettingsCellColorDiv(colorArray){
+        var div = document.createElement("div");
+        div.setAttribute("style", "padding-left: 13px;")
+
+        for (var i = 0; i < colorArray.length; i++) {
+            var colorDiv = document.createElement("div");
+            colorDiv.setAttribute("class", "settingsCellColorSelector")
+            colorDiv.setAttribute("style", "background-color: "+ colorArray[i])
+            div.appendChild(colorDiv)
+        }
+
+
+        return div
+    }
+
+    function createSettingsCellSpriteDiv(imageName) {
+        var nameDiv = document.createElement("p");
+        nameDiv.innerHTML = imageName;
+        return nameDiv;
+    }
 
     function receiveSettingsTableUpdate(midiNote, column, value, index ){
        
@@ -398,6 +634,7 @@
 
         // Store Midi settings locally
         localStorage.setItem("MIDISettings", JSON.stringify(MIDISettings));
+        renderSettingsTable()
 
     }
 
@@ -410,6 +647,10 @@
         var midiNote = midiEventID
         var boundEvent = MIDISettings[midiNote]['event'];
         var colorsArray = MIDISettings[midiNote]['colorsArray'];
+        var spriteObj = {
+            imagePath: MIDISettings[midiNote]['imagePath'],
+            frames: MIDISettings[midiNote]['frames']
+        }
 
         if(boundEvent != null){
             console.log("event")
@@ -419,6 +660,7 @@
                 frame: 0,
                 function: "",
                 settingsColorsArray: colorsArray,
+                spriteObj: spriteObj,
                 colorIndex: 0,
                 kill: false
             })
@@ -497,6 +739,8 @@
         //add init for each animation
         for (var i = 0; i < initAnimationsArray.length; i++) {
             var initAnimationObj = initAnimationsArray[i];
+            console.log(initAnimationObj)
+            var midiEventObject = midiEventLookupObj[initAnimationObj.boundEventObjID]['displayName'];
 
             //determines which display to init
             switch(midiEventLookupObj[initAnimationObj.boundEventObjID]['displayName']){
@@ -523,7 +767,7 @@
                     break;
 
                 case 'gifAnimation':
-                    gifAnimationInit("Llama.png", 6);
+                    gifAnimationInit(initAnimationObj['spriteObj']['imagePath'], initAnimationObj['spriteObj']['frames']);
                     initAnimationsArray[i]['initiate'] = false;
                     initAnimationsArray[i]['kill'] = true;
                     animaitonCycleDisplayCommand = initAnimationsArray[i]['boundEventObjID'];
